@@ -53,13 +53,18 @@ namespace hagymix
                 {
                     if (maze[i, j] != null)
                     {
-                        Viewbox cell = new Viewbox();
-                        cell.Child = new Label {
-                            Content = maze[i, j]?.roomChar,
-                            HorizontalContentAlignment = HorizontalAlignment.Center,
-                            VerticalContentAlignment = VerticalAlignment.Center,
-                            FontSize = 300
+                        Viewbox cell = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.Both, Margin = new Thickness(0) };
+                        var tb = new TextBlock {
+                            Text = maze[i, j]?.roomChar,
+                            TextAlignment = TextAlignment.Center,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            VerticalAlignment = VerticalAlignment.Center,
+                            FontSize = 100,
+                            Padding = new Thickness(0),
+                            Margin = new Thickness(0),
+                            FontFamily = new FontFamily("Consolas")
                         };
+                        cell.Child = tb;
                         Grid.SetRow(cell, i);
                         Grid.SetColumn(cell, j);
                         MazeGrid.Children.Add(cell);
