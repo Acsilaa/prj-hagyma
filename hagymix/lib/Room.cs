@@ -9,7 +9,7 @@
          */
         public bool[] ways = new bool[4];
 
-        string? roomChar; // ha null, akkor üres
+        public string? roomChar; // ha null, akkor üres
         public bool isEntrance = false;
         public bool isTreasure = false;
 
