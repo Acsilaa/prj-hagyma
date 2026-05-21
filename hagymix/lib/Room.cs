@@ -70,5 +70,29 @@
                     break;
             }
         }
+
+
+        public static char GetCharFromWays(bool[] ways)
+        {
+            if (ways == null || ways.Length != 4) return '.';
+
+            bool u = ways[0], r = ways[1], d = ways[2], l = ways[3];
+
+            if (u && r && d && l) return '╬';
+            if (u && !r && d && !l) return '║';
+            if (!u && r && !d && l) return '═';
+            if (u && !r && !d && l) return '╝';
+            if (u && r && !d && !l) return '╚';
+            if (!u && r && d && l) return '╦';
+            if (!u && !r && d && l) return '╗';
+            if (u && r && !d && l) return '╩';
+            if (u && r && d && !l) return '╠';
+            if (u && !r && d && l) return '╣';
+            if (!u && r && d && !l) return '╔';
+            if (!u && !r && !d && !l) return '.';
+
+
+            return '.';
+        }
     }
 }
