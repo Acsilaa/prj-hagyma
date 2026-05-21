@@ -81,7 +81,7 @@ namespace hagymix.lib
                 case Direction.Right:
                     if (this.map[this.y, this.x].ways[1])
                     {
-                        this.y = this.x + 1;
+                        this.x = this.x + 1;
                         moved();
                         return true;
                     }
@@ -97,7 +97,7 @@ namespace hagymix.lib
                 case Direction.Left:
                     if (this.map[this.y, this.x].ways[3])
                     {
-                        this.y = this.x - 1;
+                        this.x = this.x - 1;
                         moved();
                         return true;
                     }
