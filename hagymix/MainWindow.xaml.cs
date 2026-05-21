@@ -22,7 +22,7 @@ namespace hagymix
     public partial class MainWindow : Window
     {
 
-        static Room?[,] maze = StringHelper.Char2DToRoomMap(StringHelper.FileToChar2D("resources/minta.txt"));
+        static Room[,] maze = StringHelper.Char2DToRoomMap(StringHelper.FileToChar2D("resources/minta.txt"));
         static int[] playerPos = new int[2] { 0, 0 };
         static int[] mazeDimensions = new int[2] { Room.GetMazeLength(maze), Room.GetMazeWidth(maze) };
         static Player player;
@@ -54,24 +54,24 @@ namespace hagymix
             {
                 for (int j = 0; j < mazeDimensions[1]; j++)
                 {
-                    if (maze[i, j] != null)
-                    {
-                        Viewbox cell = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.Both, Margin = new Thickness(0) };
-                        var tb = new TextBlock {
-                            Text = maze[i, j]?.roomChar,
-                            TextAlignment = TextAlignment.Center,
-                            HorizontalAlignment = HorizontalAlignment.Center,
-                            VerticalAlignment = VerticalAlignment.Center,
-                            FontSize = 100,
-                            Padding = new Thickness(0),
-                            Margin = new Thickness(0),
-                            FontFamily = new FontFamily("Consolas")
-                        };
-                        cell.Child = tb;
-                        Grid.SetRow(cell, i);
-                        Grid.SetColumn(cell, j);
-                        MazeGrid.Children.Add(cell);
-                    }
+                    Viewbox cell = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.Both, Margin = new Thickness(0) };
+                    // Defensive: some entries in maze[,] may be null. Use a placeholder when missing.
+                    var room = maze[i, j];
+                    string text = room != null ? room.roomChar.ToString() : " ";
+                    var tb = new TextBlock {
+                        Text = text,
+                        TextAlignment = TextAlignment.Center,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        FontSize = 100,
+                        Padding = new Thickness(0),
+                        Margin = new Thickness(0),
+                        FontFamily = new FontFamily("Consolas")
+                    };
+                    cell.Child = tb;
+                    Grid.SetRow(cell, i);
+                    Grid.SetColumn(cell, j);
+                    MazeGrid.Children.Add(cell);
                 }
             }
         }

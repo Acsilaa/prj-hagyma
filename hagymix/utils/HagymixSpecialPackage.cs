@@ -66,7 +66,6 @@ namespace hagymix.utils
                 {
                     var room = maze[i, j];
                     if (room == null) continue;
-
                     if (room.ways.All(w => w == false))
                     {
                         unavailables.Add($"{i}:{j}");

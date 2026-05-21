@@ -32,7 +32,7 @@ namespace hagymix.utils
             {
                 for (int j = 0; j < cols; j++)
                 {
-                    if (charmaze[i, j] != ' ')
+                    if (charmaze[i, j] != ' ' && charmaze[i, j] != '.')
                     {
                         processed[i, j] = new Room(charmaze[i, j]);
                     }
@@ -55,10 +55,26 @@ namespace hagymix.utils
                 {
                     if (rawmaze[i, j] != null)
                     {
-                        if (i > 0 && rawmaze[i - 1, j] != null && rawmaze[i - 1, j].ways[2]) rawmaze[i, j]?.ways[0] = true;
-                        if (j < cols - 1 && rawmaze[i, j + 1] != null && rawmaze[i, j + 1].ways[3]) rawmaze[i, j]?.ways[1] = true;
-                        if (i < rows - 1 && rawmaze[i + 1, j] != null && rawmaze[i + 1, j].ways[0]) rawmaze[i, j]?.ways[2] = true;
-                        if (j > 0 && rawmaze[i, j - 1] != null && rawmaze[i, j - 1].ways[1]) rawmaze[i, j]?.ways[3] = true;
+                        if (i > 0)
+                        {
+                            if (rawmaze[i - 1, j] != null && rawmaze[i - 1, j].ways[2]) rawmaze[i, j].ways[0] = true;
+                            else if (rawmaze[i - 1, j] == null) rawmaze[i, j].ways[0] = false;
+                        }
+                        if (j < cols - 1)
+                        {
+                            if (rawmaze[i, j + 1] != null && rawmaze[i, j + 1].ways[3]) rawmaze[i, j].ways[1] = true;
+                            else if (rawmaze[i, j + 1] == null) rawmaze[i, j].ways[1] = false;
+                        }
+                        if (i < rows - 1)
+                        {
+                            if (rawmaze[i + 1, j] != null && rawmaze[i + 1, j].ways[0]) rawmaze[i, j].ways[2] = true;
+                            else if (rawmaze[i + 1, j] == null) rawmaze[i, j].ways[2] = false;
+                        }
+                        if (j > 0)
+                        {
+                            if (rawmaze[i, j - 1] != null && rawmaze[i, j - 1].ways[1]) rawmaze[i, j].ways[3] = true;
+                            else if (rawmaze[i, j - 1] == null) rawmaze[i, j].ways[3] = false;
+                        }
 
                         // mark edge rooms as entrances if their ways point outward
                         if (i == 0 && rawmaze[i, j]?.ways[0] == true) rawmaze[i, j]?.isEntrance = true;
@@ -84,20 +100,19 @@ namespace hagymix.utils
             }
         }
 
-        public static Room?[] ToFlatRoomsArray(Room?[,] maze)
+        public static Room[] ToFlatRoomsArray(Room?[,] maze)
         {
             int rows = maze.GetLength(0);
             int cols = maze.GetLength(1);
-            Room?[] flat = new Room?[rows * cols];
-            int idx = 0;
+            var list = new List<Room>();
             for (int i = 0; i < rows; i++)
             {
                 for (int j = 0; j < cols; j++)
                 {
-                    flat[idx++] = maze[i, j];
+                    if (maze[i, j] != null) list.Add(maze[i, j]!);
                 }
             }
-            return flat;
+            return list.ToArray();
         }
     }
 }
