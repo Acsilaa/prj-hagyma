@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using hagymix.lib;
 
 namespace hagymix.utils
 {
@@ -16,7 +17,7 @@ namespace hagymix.utils
         {
             var maze = StringHelper.Char2DToRoomMap(map);
             var flat = StringHelper.ToFlatRoomsArray(maze);
-            return flat.Count(x => x.isTreasure);
+            return flat.Count(x => x.isTreasure == Treasure.Contains || x.isTreasure == Treasure.Collected);
         }
         /// <summary>
         /// A kapott térkép széleit végignézve megállapítja, hogy hány kijárat van.

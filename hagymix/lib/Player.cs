@@ -60,10 +60,10 @@ namespace hagymix.lib
         void moved()
         {
             //check treasure
-            if (this.map[this.y, this.x].isTreasure)
+            if (this.map[this.y, this.x].isTreasure == Treasure.Contains)
             {
                 this.treasureCount++;
-                this.map[this.y, this.x].isTreasure = false;
+                this.map[this.y, this.x].isTreasure = Treasure.Collected;
             }
         }
         public bool Move(Direction direction)
