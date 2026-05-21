@@ -58,12 +58,18 @@ namespace hagymix
                     // Defensive: some entries in maze[,] may be null. Use a placeholder when missing.
                     var room = maze[i, j];
                     string text = room != null ? room.roomChar.ToString() : " ";
-                    var tb = new TextBlock {
+
+                    // Compute the foreground using the local 'room' variable to avoid re-indexing maze when it's null.
+                    var foreground = (room?.isTreasure == Treasure.Collected) ? Brushes.Yellow : Brushes.Black;
+
+                    var tb = new TextBlock
+                    {
                         Text = text,
                         TextAlignment = TextAlignment.Center,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center,
                         FontSize = 100,
+                        Foreground = foreground,
                         Padding = new Thickness(0),
                         Margin = new Thickness(0),
                         FontFamily = new FontFamily("Consolas")
@@ -72,6 +78,7 @@ namespace hagymix
                     Grid.SetRow(cell, i);
                     Grid.SetColumn(cell, j);
                     MazeGrid.Children.Add(cell);
+
                 }
             }
         }
@@ -113,18 +120,68 @@ namespace hagymix
                     if (!player.IsStarted) { player.SetEntrance(); }
                     break;
             }
-            for(int i =0;i< MazeGrid.Children.Count; i++)
-            {
-                Viewbox vb2 = (Viewbox)MazeGrid.Children[i];
-                TextBlock tb2 = (TextBlock)vb2.Child;
-                tb2.Background = Brushes.White;
-            }
-            
-            
-            Viewbox vb = (Viewbox)MazeGrid.Children[player.Y * maze.GetLength(1) + player.X];
-            TextBlock tb = (TextBlock)vb.Child;
-            tb.Background = Brushes.Green;
 
+            // Guard against maze being null
+            if (maze == null)
+            {
+                return;
+            }
+
+            int rows = maze.GetLength(0);
+            int cols = maze.GetLength(1);
+
+            // Ensure MazeGrid.Children count is consistent with maze dimensions
+            for (int i = 0; i < MazeGrid.Children.Count; i++)
+            {
+                var vb2 = MazeGrid.Children[i] as Viewbox;
+                if (vb2 == null) continue;
+
+                var tb2 = vb2.Child as TextBlock;
+                if (tb2 == null) continue;
+
+                tb2.Background = Brushes.White;
+
+                int y = i / cols;
+                int x = i % cols;
+
+                if (y >= 0 && y < rows && x >= 0 && x < cols)
+                {
+                    var cell = maze[y, x];
+                    bool isCollected = false;
+                    if (cell != null)
+                    {
+                        // Assuming isTreasure is an enum or value type on the cell
+                        isCollected = (cell.isTreasure == Treasure.Collected);
+                    }
+                    tb2.Foreground = isCollected ? Brushes.Yellow : Brushes.Black;
+                }
+                else
+                {
+                    tb2.Foreground = Brushes.Black;
+                }
+            }
+
+            // Guard player index access
+            if (player == null) return;
+
+            if (player.Y < 0 || player.X < 0)
+            {
+                return;
+            }
+
+            int playerIndex = player.Y * cols + player.X;
+            if (playerIndex >= 0 && playerIndex < MazeGrid.Children.Count)
+            {
+                var vb = MazeGrid.Children[playerIndex] as Viewbox;
+                if (vb != null)
+                {
+                    var tb = vb.Child as TextBlock;
+                    if (tb != null)
+                    {
+                        tb.Background = Brushes.Green;
+                    }
+                }
+            }
         }
 
         private void LoadMapClick(object sender, RoutedEventArgs e)
