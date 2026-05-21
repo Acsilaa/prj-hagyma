@@ -56,8 +56,23 @@ namespace hagymix.utils
         static List<string> GetUnavailableElements(char[,] map)
         {
             List<string> unavailables = new List<string>();
-            // ?
-            // pld: string poz = "4:12"; 
+            var maze = StringHelper.Char2DToRoomMap(map);
+            int rows = maze.GetLength(0);
+            int cols = maze.GetLength(1);
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    var room = maze[i, j];
+                    if (room == null) continue;
+
+                    if (room.ways.All(w => w == false))
+                    {
+                        unavailables.Add($"{i}:{j}");
+                    }
+                }
+            }
+
             return unavailables;
         }
         /// <summary>
