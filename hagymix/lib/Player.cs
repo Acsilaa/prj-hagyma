@@ -10,8 +10,8 @@ namespace hagymix.lib
     }
     internal class Player
     {
-        int x;
-        int y;
+        int x = 0;
+        int y = 0;
         bool isStarted = false;
         Room[,] map;
         int treasureCount = 0;
@@ -27,8 +27,8 @@ namespace hagymix.lib
         public void ChangeEntrance()
         {
             if (this.isStarted) return;
-            for (int i = this.y; i < this.map.Length; i++) {
-                for (int z = this.x; z < this.map.GetLength(1); z++)
+            for (int i = this.y; i < this.map.GetLength(0); i++) {
+                for (int z = this.x + 1; z < this.map.GetLength(1); z++)
                 {
                     if (this.map[i, z].isEntrance)
                     {
@@ -39,7 +39,7 @@ namespace hagymix.lib
                 }
                 this.x = 0;
             }
-            for (int i = 0; i < this.map.Length; i++)
+            for (int i = 0; i < this.map.GetLength(0); i++)
             {
                 for (int z = 0; z < this.map.GetLength(1); z++)
                 {
