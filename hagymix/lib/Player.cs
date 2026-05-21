@@ -15,7 +15,7 @@ namespace hagymix.lib
         int y = 0;
         bool isOnMap = false;
         bool isStarted = false;
-        Room[,] map;
+        Room?[,] map;
         int treasureCount = 0;
 
         public int X { get => x; }
@@ -23,7 +23,7 @@ namespace hagymix.lib
         public bool IsStarted { get => isStarted; }
         public bool IsOnMap { get => isOnMap; }
 
-        public Player(Room[,] map) { 
+        public Player(Room?[,] map) { 
             this.map = map;
             ChangeEntrance();
         }
@@ -34,7 +34,7 @@ namespace hagymix.lib
             for (int i = this.y; i < this.map.GetLength(0); i++) {
                 for (int z = this.x + 1; z < this.map.GetLength(1); z++)
                 {
-                    if (this.map[i, z].isEntrance)
+                    if (this.map[i, z] != null && this.map[i, z].isEntrance)
                     {
                         this.y = i;
                         this.x = z;
@@ -47,7 +47,7 @@ namespace hagymix.lib
             {
                 for (int z = 0; z < this.map.GetLength(1); z++)
                 {
-                    if (this.map[i, z].isEntrance)
+                    if (this.map[i, z] != null && this.map[i, z].isEntrance)
                     {
                         this.y = i;
                         this.x = z;
@@ -75,7 +75,7 @@ namespace hagymix.lib
                 return;
             }
             //check treasure
-            if (this.map[this.y, this.x].isTreasure == Treasure.Contains)
+            if (this.map[this.y, this.x] != null && this.map[this.y, this.x].isTreasure == Treasure.Contains)
             {
                 this.treasureCount++;
                 this.map[this.y, this.x].isTreasure = Treasure.Collected;
@@ -87,7 +87,7 @@ namespace hagymix.lib
             switch (direction)
             {
                 case Direction.Up:
-                    if(this.map[this.y, this.x].ways[0])
+                    if(this.map[this.y, this.x] != null && this.map[this.y, this.x].ways[0])
                     {
                         this.y = this.y - 1;
                         moved();
@@ -95,7 +95,7 @@ namespace hagymix.lib
                     }
                     break;
                 case Direction.Right:
-                    if (this.map[this.y, this.x].ways[1])
+                    if (this.map[this.y, this.x] != null && this.map[this.y, this.x].ways[1])
                     {
                         this.x = this.x + 1;
                         moved();
@@ -103,7 +103,7 @@ namespace hagymix.lib
                     }
                     break;
                 case Direction.Down:
-                    if (this.map[this.y, this.x].ways[2])
+                    if (this.map[this.y, this.x] != null && this.map[this.y, this.x].ways[2])
                     {
                         this.y = this.y + 1;
                         moved();
@@ -111,7 +111,7 @@ namespace hagymix.lib
                     }
                     break;
                 case Direction.Left:
-                    if (this.map[this.y, this.x].ways[3])
+                    if (this.map[this.y, this.x] != null && this.map[this.y, this.x].ways[3])
                     {
                         this.x = this.x - 1;
                         moved();

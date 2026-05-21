@@ -22,7 +22,7 @@ namespace hagymix
     public partial class MainWindow : Window
     {
 
-        static Room?[,] maze = StringHelper.Char2DToRoomMap(StringHelper.FileToChar2D("resources/minta.txt"));
+        static Room[,] maze = StringHelper.Char2DToRoomMap(StringHelper.FileToChar2D("resources/minta.txt"));
         static int[] playerPos = new int[2] { 0, 0 };
         static int[] mazeDimensions = new int[2] { Room.GetMazeLength(maze), Room.GetMazeWidth(maze) };
         static Player player;
@@ -54,24 +54,31 @@ namespace hagymix
             {
                 for (int j = 0; j < mazeDimensions[1]; j++)
                 {
-                    if (maze[i, j] != null)
+                    Viewbox cell = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.Both, Margin = new Thickness(0) };
+                    // Defensive: some entries in maze[,] may be null. Use a placeholder when missing.
+                    var room = maze[i, j];
+                    string text = room != null ? room.roomChar.ToString() : " ";
+
+                    // Compute the foreground using the local 'room' variable to avoid re-indexing maze when it's null.
+                    var foreground = (room?.isTreasure == Treasure.Collected) ? Brushes.Yellow : Brushes.Black;
+
+                    var tb = new TextBlock
                     {
-                        Viewbox cell = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.Both, Margin = new Thickness(0) };
-                        var tb = new TextBlock {
-                            Text = maze[i, j]?.roomChar,
-                            TextAlignment = TextAlignment.Center,
-                            HorizontalAlignment = HorizontalAlignment.Center,
-                            VerticalAlignment = VerticalAlignment.Center,
-                            FontSize = 100,
-                            Padding = new Thickness(0),
-                            Margin = new Thickness(0),
-                            FontFamily = new FontFamily("Consolas")
-                        };
-                        cell.Child = tb;
-                        Grid.SetRow(cell, i);
-                        Grid.SetColumn(cell, j);
-                        MazeGrid.Children.Add(cell);
-                    }
+                        Text = text,
+                        TextAlignment = TextAlignment.Center,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        FontSize = 100,
+                        Foreground = foreground,
+                        Padding = new Thickness(0),
+                        Margin = new Thickness(0),
+                        FontFamily = new FontFamily("Consolas")
+                    };
+                    cell.Child = tb;
+                    Grid.SetRow(cell, i);
+                    Grid.SetColumn(cell, j);
+                    MazeGrid.Children.Add(cell);
+
                 }
             }
         }
@@ -128,6 +135,67 @@ namespace hagymix
             }
             
 
+            // Guard against maze being null
+            if (maze == null)
+            {
+                return;
+            }
+
+            int rows = maze.GetLength(0);
+            int cols = maze.GetLength(1);
+
+            // Ensure MazeGrid.Children count is consistent with maze dimensions
+            for (int i = 0; i < MazeGrid.Children.Count; i++)
+            {
+                var vb2 = MazeGrid.Children[i] as Viewbox;
+                if (vb2 == null) continue;
+
+                var tb2 = vb2.Child as TextBlock;
+                if (tb2 == null) continue;
+
+                tb2.Background = Brushes.White;
+
+                int y = i / cols;
+                int x = i % cols;
+
+                if (y >= 0 && y < rows && x >= 0 && x < cols)
+                {
+                    var cell = maze[y, x];
+                    bool isCollected = false;
+                    if (cell != null)
+                    {
+                        // Assuming isTreasure is an enum or value type on the cell
+                        isCollected = (cell.isTreasure == Treasure.Collected);
+                    }
+                    tb2.Foreground = isCollected ? Brushes.Yellow : Brushes.Black;
+                }
+                else
+                {
+                    tb2.Foreground = Brushes.Black;
+                }
+            }
+
+            // Guard player index access
+            if (player == null) return;
+
+            if (player.Y < 0 || player.X < 0)
+            {
+                return;
+            }
+
+            int playerIndex = player.Y * cols + player.X;
+            if (playerIndex >= 0 && playerIndex < MazeGrid.Children.Count)
+            {
+                var vb = MazeGrid.Children[playerIndex] as Viewbox;
+                if (vb != null)
+                {
+                    var tb = vb.Child as TextBlock;
+                    if (tb != null)
+                    {
+                        tb.Background = Brushes.Green;
+                    }
+                }
+            }
         }
 
         private void LoadMapClick(object sender, RoutedEventArgs e)
