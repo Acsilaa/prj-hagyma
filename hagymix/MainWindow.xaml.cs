@@ -63,7 +63,6 @@ namespace hagymix
                             HorizontalAlignment = HorizontalAlignment.Center,
                             VerticalAlignment = VerticalAlignment.Center,
                             FontSize = 100,
-                            Foreground = maze[i,j].isTreasure == Treasure.Collected ? Brushes.Yellow : Brushes.Black,
                             Padding = new Thickness(0),
                             Margin = new Thickness(0),
                             FontFamily = new FontFamily("Consolas")
@@ -121,10 +120,13 @@ namespace hagymix
                 tb2.Background = Brushes.White;
                 tb2.Foreground = (maze[(int)i / maze.GetLength(1), i % maze.GetLength(1)].isTreasure == Treasure.Collected) ? Brushes.Yellow : Brushes.Black;
             }
+            if (player.IsOnMap)
+            {
+                Viewbox vb = (Viewbox)MazeGrid.Children[player.Y * maze.GetLength(1) + player.X];
+                TextBlock tb = (TextBlock)vb.Child;
+                tb.Background = Brushes.Green;
+            }
             
-            Viewbox vb = (Viewbox)MazeGrid.Children[player.Y * maze.GetLength(1) + player.X];
-            TextBlock tb = (TextBlock)vb.Child;
-            tb.Background = Brushes.Green;
 
         }
 

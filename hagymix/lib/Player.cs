@@ -13,6 +13,7 @@ namespace hagymix.lib
     {
         int x = 0;
         int y = 0;
+        bool isOnMap = false;
         bool isStarted = false;
         Room[,] map;
         int treasureCount = 0;
@@ -20,6 +21,7 @@ namespace hagymix.lib
         public int X { get => x; }
         public int Y { get => y; }
         public bool IsStarted { get => isStarted; }
+        public bool IsOnMap { get => isOnMap; }
 
         public Player(Room[,] map) { 
             this.map = map;
@@ -28,6 +30,7 @@ namespace hagymix.lib
         public void ChangeEntrance()
         {
             if (this.isStarted) return;
+            this.isOnMap = true;
             for (int i = this.y; i < this.map.GetLength(0); i++) {
                 for (int z = this.x + 1; z < this.map.GetLength(1); z++)
                 {
@@ -52,10 +55,12 @@ namespace hagymix.lib
                     }
                 }
             }
+            
         }
         public void SetEntrance()
         {
             this.isStarted = true;
+            this.isOnMap = true;
             return;
         }
         void moved()
@@ -64,6 +69,9 @@ namespace hagymix.lib
             if(this.y == this.map.GetLength(0) || this.y < 0 || this.x < 0 || this.x == this.map.GetLength(1))
             {
                 MessageBox.Show("Kiment!");
+                this.isOnMap = false;
+                this.x = 0;
+                this.y = 0;
                 return;
             }
             //check treasure
@@ -75,6 +83,7 @@ namespace hagymix.lib
         }
         public bool Move(Direction direction)
         {
+            if (!this.isOnMap) return false;
             switch (direction)
             {
                 case Direction.Up:
