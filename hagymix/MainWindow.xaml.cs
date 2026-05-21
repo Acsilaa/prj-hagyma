@@ -78,7 +78,6 @@ namespace hagymix
         private void Main_KeyDown(object sender, KeyEventArgs e)
         {
             if (!isPlaying) return;
-            MessageBox.Show(e.Key.ToString());
             switch (e.Key)
             {
                 case Key.Up:
@@ -114,6 +113,14 @@ namespace hagymix
                     if (!player.IsStarted) { player.SetEntrance(); }
                     break;
             }
+            for(int i =0;i< MazeGrid.Children.Count; i++)
+            {
+                Viewbox vb2 = (Viewbox)MazeGrid.Children[i];
+                TextBlock tb2 = (TextBlock)vb2.Child;
+                tb2.Background = Brushes.White;
+            }
+            
+            
             Viewbox vb = (Viewbox)MazeGrid.Children[player.Y * maze.GetLength(1) + player.X];
             TextBlock tb = (TextBlock)vb.Child;
             tb.Background = Brushes.Green;
