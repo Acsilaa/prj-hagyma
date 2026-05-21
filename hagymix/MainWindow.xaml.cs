@@ -26,13 +26,11 @@ namespace hagymix
         static int[] playerPos = new int[2] { 0, 0 };
         static int[] mazeDimensions = new int[2] { Room.GetMazeLength(maze), Room.GetMazeWidth(maze) };
         static Player player;
+        static bool isPlaying = false;
         public MainWindow()
         {
             InitializeComponent();
-            CreateColumnDefinitions();
-            CreateRowDefinitions();
-            CreateMapVisualization();
-            player = new Player(maze);
+            
         }
 
         void CreateColumnDefinitions()
@@ -79,6 +77,7 @@ namespace hagymix
         }
         private void Main_KeyDown(object sender, KeyEventArgs e)
         {
+            if (!isPlaying) return;
             MessageBox.Show(e.Key.ToString());
             switch (e.Key)
             {
@@ -121,5 +120,25 @@ namespace hagymix
 
         }
 
+        private void LoadMapClick(object sender, RoutedEventArgs e)
+        {
+            CreateColumnDefinitions();
+            CreateRowDefinitions();
+            CreateMapVisualization();
+            player = new Player(maze);
+            isPlaying = true;
+            MenuGrid.Visibility = Visibility.Hidden;
+            MazeGrid.Visibility = Visibility.Visible;
+        }
+
+        private void EditorClick(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ToggleLangClick(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

@@ -19,7 +19,51 @@
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
 
-        <Grid  Grid.Column="1" Grid.Row="1" x:Name="MazeGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0">
+        <!-- Gameplay -->
+        <Grid  Grid.Column="1" Grid.Row="1" x:Name="MazeGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0" Visibility="Hidden"></Grid>
+
+        <!-- Menu -->
+        <Grid  Grid.Column="1" Grid.Row="1" x:Name="MenuGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0" Visibility="Visible">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="5*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Column="1" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24">Menu</Label>
+
+            <Grid Grid.Column="1" Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="5*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="5*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+                <Button Grid.Column="1" Content="Pálya betöltése" HorizontalAlignment="Stretch" Grid.Row="2" VerticalAlignment="Stretch" Click="LoadMapClick"/>
+                <Button Grid.Column="3" Content="Szerkesztő" HorizontalAlignment="Stretch" Grid.Row="2" VerticalAlignment="Stretch" Click="EditorClick"/>
+            </Grid>
+
         </Grid>
+
+        <!-- Editor -->
+        <Grid  Grid.Column="1" Grid.Row="1" x:Name="Editor" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0" Visibility="Hidden">
+
+        </Grid>
+
+        <Button Grid.Column="1" Grid.Row="2" Content="HU" HorizontalAlignment="Center" VerticalAlignment="Bottom" Click="ToggleLangClick" x:Name="LangToggleBTN" Padding="10 5 10 5"/>
     </Grid>
 </Window>
