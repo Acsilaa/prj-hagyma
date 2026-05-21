@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace hagymix.utils
@@ -24,7 +25,9 @@ namespace hagymix.utils
         /// <returns>Az alkalmas kijáratok száma</returns>
         static int GetSuitableEntrance(char[,] map)
         {
-            return -1;
+            var maze = StringHelper.Char2DToRoomMap(map);
+            var flat = StringHelper.ToFlatRoomsArray(maze);
+            return flat.Count(x => x.isEntrance);
         }
         /// <summary>
         /// Megnézi, hogy van-e a térképen meg nem engedett karakter?
@@ -33,7 +36,17 @@ namespace hagymix.utils
         /// <returns>true - A térkép tartalmaz szabálytalan karaktert, false - nincs benne ilyen</returns>
         static bool IsInvalidElement(char[,] map)
         {
-            return true;
+            var validChars = new HashSet<char>() { '║','═','╝','╚','╦','╗','╩','╠','╬','╣','╔','█','.',' ' };
+            int rows = map.GetLength(0);
+            int cols = map.GetLength(1);
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    if (!validChars.Contains(map[i, j])) return true;
+                }
+            }
+            return false;
         }
         /// <summary>
         /// Visszaadja azoknak a járatkaraktereknek a pozícióját, amelyekhez egyetlen szomszéd pozícióból sem lehet eljutni.
