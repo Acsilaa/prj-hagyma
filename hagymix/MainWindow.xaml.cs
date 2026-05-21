@@ -85,71 +85,41 @@ namespace hagymix
         private void Main_KeyDown(object sender, KeyEventArgs e)
         {
             if (!isPlaying) return;
-            switch (e.Key)
-            {
-                case Key.Up:
-                    if (player.IsStarted)
-                    {
-                        player.Move(Direction.Up);
-                    }
-                    break;
-                case Key.Right:
-                    if (player.IsStarted)
-                    {
-                        player.Move(Direction.Right);
-                    }
-                    else
-                    {
-                        player.ChangeEntrance();
-                    }
-                    break;
-                case Key.Down:
-                    if (player.IsStarted)
-                    {
-                        player.Move(Direction.Down);
-                    }
-                    break;
-                case Key.Left:
-                    if (player.IsStarted)
-                    {
-                        player.Move(Direction.Left);
-                    }
-                    break;
-                case Key.Enter:
-                case Key.Space:
-                    if (!player.IsStarted) { player.SetEntrance(); }
-                    break;
-            }
-            for (int i =0;i< MazeGrid.Children.Count; i++)
-            {
-                Viewbox vb2 = (Viewbox)MazeGrid.Children[i];
-                TextBlock tb2 = (TextBlock)vb2.Child;
-                tb2.Background = Brushes.White;
-                tb2.Foreground = (maze[(int)i / maze.GetLength(1), i % maze.GetLength(1)].isTreasure == Treasure.Collected) ? Brushes.Yellow : Brushes.Black;
-            }
-            if (player.IsOnMap)
-            {
-                Viewbox vb = (Viewbox)MazeGrid.Children[player.Y * maze.GetLength(1) + player.X];
-                TextBlock tb = (TextBlock)vb.Child;
-                tb.Background = Brushes.Green;
-            }
-            
 
-            // Guard against maze being null
-            if (maze == null)
-            {
-                return;
-            }
+            // Guard player and maze before any use
+            if (player == null) return;
+            if (maze == null) return;
 
             int rows = maze.GetLength(0);
             int cols = maze.GetLength(1);
+            if (cols == 0 || rows == 0) return;
 
-            // Ensure MazeGrid.Children count is consistent with maze dimensions
+            switch (e.Key)
+            {
+                case Key.Up:
+                    if (player.IsStarted) player.Move(Direction.Up);
+                    break;
+                case Key.Right:
+                    if (player.IsStarted) player.Move(Direction.Right);
+                    else player.ChangeEntrance();
+                    break;
+                case Key.Down:
+                    if (player.IsStarted) player.Move(Direction.Down);
+                    break;
+                case Key.Left:
+                    if (player.IsStarted) player.Move(Direction.Left);
+                    break;
+                case Key.Enter:
+                case Key.Space:
+                    if (!player.IsStarted) player.SetEntrance();
+                    break;
+            }
+
+            // Update all cells safely
             for (int i = 0; i < MazeGrid.Children.Count; i++)
             {
                 var vb2 = MazeGrid.Children[i] as Viewbox;
                 if (vb2 == null) continue;
-
                 var tb2 = vb2.Child as TextBlock;
                 if (tb2 == null) continue;
 
@@ -157,16 +127,10 @@ namespace hagymix
 
                 int y = i / cols;
                 int x = i % cols;
-
                 if (y >= 0 && y < rows && x >= 0 && x < cols)
                 {
                     var cell = maze[y, x];
-                    bool isCollected = false;
-                    if (cell != null)
-                    {
-                        // Assuming isTreasure is an enum or value type on the cell
-                        isCollected = (cell.isTreasure == Treasure.Collected);
-                    }
+                    bool isCollected = (cell != null && cell.isTreasure == Treasure.Collected);
                     tb2.Foreground = isCollected ? Brushes.Yellow : Brushes.Black;
                 }
                 else
@@ -175,25 +139,15 @@ namespace hagymix
                 }
             }
 
-            // Guard player index access
-            if (player == null) return;
-
-            if (player.Y < 0 || player.X < 0)
+            // Highlight player cell
+            if (player.IsOnMap)
             {
-                return;
-            }
-
-            int playerIndex = player.Y * cols + player.X;
-            if (playerIndex >= 0 && playerIndex < MazeGrid.Children.Count)
-            {
-                var vb = MazeGrid.Children[playerIndex] as Viewbox;
-                if (vb != null)
+                int playerIndex = player.Y * cols + player.X;
+                if (playerIndex >= 0 && playerIndex < MazeGrid.Children.Count)
                 {
-                    var tb = vb.Child as TextBlock;
-                    if (tb != null)
-                    {
-                        tb.Background = Brushes.Green;
-                    }
+                    var vb = MazeGrid.Children[playerIndex] as Viewbox;
+                    var tb = vb?.Child as TextBlock;
+                    if (tb != null) tb.Background = Brushes.Green;
                 }
             }
         }
