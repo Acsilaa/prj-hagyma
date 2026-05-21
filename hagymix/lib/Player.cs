@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows;
 
 namespace hagymix.lib
 {
@@ -59,6 +60,12 @@ namespace hagymix.lib
         }
         void moved()
         {
+            //check if it went out
+            if(this.y == this.map.GetLength(0) || this.y < 0 || this.x < 0 || this.x == this.map.GetLength(1))
+            {
+                MessageBox.Show("Kiment!");
+                return;
+            }
             //check treasure
             if (this.map[this.y, this.x].isTreasure == Treasure.Contains)
             {
