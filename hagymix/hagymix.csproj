@@ -13,7 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="resources\minta.txt" />
+    <Resource Include="resources\minta.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

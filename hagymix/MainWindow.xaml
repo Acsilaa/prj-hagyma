@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:hagymix"
         mc:Ignorable="d"
+        KeyDown="Main_KeyDown"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <Grid  >
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="40"/>
             <ColumnDefinition Width="*"/>
@@ -18,7 +19,7 @@
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Column="1" Grid.Row="1" x:Name="MazeGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0">
+        <Grid  Grid.Column="1" Grid.Row="1" x:Name="MazeGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0">
         </Grid>
     </Grid>
 </Window>

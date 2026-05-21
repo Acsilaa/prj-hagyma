@@ -22,7 +22,7 @@ namespace hagymix.lib
 
         public Player(Room[,] map) { 
             this.map = map;
-
+            ChangeEntrance();
         }
         public void ChangeEntrance()
         {

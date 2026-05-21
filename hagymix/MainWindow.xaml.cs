@@ -1,5 +1,6 @@
 ﻿using hagymix.lib;
 using hagymix.utils;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,17 +18,21 @@ namespace hagymix
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     /// 
+
     public partial class MainWindow : Window
     {
+
         static Room?[,] maze = StringHelper.Char2DToRoomMap(StringHelper.FileToChar2D("resources/minta.txt"));
         static int[] playerPos = new int[2] { 0, 0 };
         static int[] mazeDimensions = new int[2] { Room.GetMazeLength(maze), Room.GetMazeWidth(maze) };
+        static Player player;
         public MainWindow()
         {
             InitializeComponent();
             CreateColumnDefinitions();
             CreateRowDefinitions();
             CreateMapVisualization();
+            player = new Player(maze);
         }
 
         void CreateColumnDefinitions()
@@ -72,5 +77,49 @@ namespace hagymix
                 }
             }
         }
+        private void Main_KeyDown(object sender, KeyEventArgs e)
+        {
+            MessageBox.Show(e.Key.ToString());
+            switch (e.Key)
+            {
+                case Key.Up:
+                    if (player.IsStarted)
+                    {
+                        player.Move(Direction.Up);
+                    }
+                    break;
+                case Key.Right:
+                    if (player.IsStarted)
+                    {
+                        player.Move(Direction.Right);
+                    }
+                    else
+                    {
+                        player.ChangeEntrance();
+                    }
+                    break;
+                case Key.Down:
+                    if (player.IsStarted)
+                    {
+                        player.Move(Direction.Down);
+                    }
+                    break;
+                case Key.Left:
+                    if (player.IsStarted)
+                    {
+                        player.Move(Direction.Left);
+                    }
+                    break;
+                case Key.Enter:
+                case Key.Space:
+                    if (!player.IsStarted) { player.SetEntrance(); }
+                    break;
+            }
+            Viewbox vb = (Viewbox)MazeGrid.Children[player.Y * maze.GetLength(1) + player.X];
+            TextBlock tb = (TextBlock)vb.Child;
+            tb.Background = Brushes.Green;
+
+        }
+
     }
 }
