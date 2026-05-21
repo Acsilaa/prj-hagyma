@@ -1,5 +1,9 @@
 ﻿namespace hagymix.lib
 {
+    enum Treasure
+    {
+        None = 0, Contains = 1, Collected = 2,
+    }
     internal class Room
     {
         /*
@@ -11,7 +15,7 @@
 
         public string? roomChar; // ha null, akkor üres
         public bool isEntrance = false;
-        public bool isTreasure = false;
+        public Treasure isTreasure = Treasure.None;
 
         public static int GetMazeWidth(Room?[,] maze)
         {
@@ -62,7 +66,7 @@
                     this.ways = new bool[4] { false, true, true, false };
                     break;
                 case '█':
-                    this.isTreasure = true;
+                    this.isTreasure = Treasure.Contains;
                     this.ways = new bool[4] { true, true, true, true };
                     break;
                 case '.':

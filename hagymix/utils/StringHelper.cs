@@ -73,7 +73,7 @@ namespace hagymix.utils
                 for (int j = 0; j < cols; j++)
                 {
                     var room = rawmaze[i, j];
-                    if (room != null && room.isTreasure)
+                    if (room != null && room.isTreasure == Treasure.Contains)
                     {
                         room.ways[0] = (i > 0 && rawmaze[i - 1, j] != null && rawmaze[i - 1, j].ways[2]);
                         room.ways[1] = (j < cols - 1 && rawmaze[i, j + 1] != null && rawmaze[i, j + 1].ways[3]);
