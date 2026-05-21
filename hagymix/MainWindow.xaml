@@ -9,17 +9,16 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="40"/>
-            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="40"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Column="1" Grid.Row="1" x:Name="MazeGrid">
-            
+        <Grid Grid.Column="1" Grid.Row="1" x:Name="MazeGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0">
         </Grid>
     </Grid>
 </Window>

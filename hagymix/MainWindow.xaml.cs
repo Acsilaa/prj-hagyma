@@ -40,7 +40,7 @@ namespace hagymix
 
         void CreateRowDefinitions()
         {
-            for (int i = 0; i < mazeDimensions[1]; i++)
+            for (int i = 0; i < mazeDimensions[0]; i++)
             {
                 MazeGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             }
@@ -54,6 +54,12 @@ namespace hagymix
                     if (maze[i, j] != null)
                     {
                         Viewbox cell = new Viewbox();
+                        cell.Child = new Label {
+                            Content = maze[i, j]?.roomChar,
+                            HorizontalContentAlignment = HorizontalAlignment.Center,
+                            VerticalContentAlignment = VerticalAlignment.Center,
+                            FontSize = 300
+                        };
                         Grid.SetRow(cell, i);
                         Grid.SetColumn(cell, j);
                         MazeGrid.Children.Add(cell);
