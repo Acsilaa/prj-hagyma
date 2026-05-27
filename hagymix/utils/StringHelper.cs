@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Shapes;
 
@@ -10,28 +11,34 @@ namespace hagymix.utils
     internal class StringHelper
     {
         public static char[,] FileToChar2D(string filename) {
-            string[] lines = File.ReadAllLines(filename);
-            char[,] processed = new char[lines.Length, lines[0].Length];
+            string[] lines = File.ReadAllLines(filename).Where(x => x != null).ToArray();
+            int maxLen = lines.Length == 0 ? 0 : lines.Max(x => x.Length);
+            char[,] processed = new char[lines.Length, maxLen];
 
             for(int i = 0; i < lines.Length; i++)
             {
-                for (int j = 0; j < lines[i].Length; j++)
+                for (int j = 0; j < maxLen; j++)
                 {
-                    processed[i, j] = lines[i][j];
+                    processed[i, j] = j < lines[i].Length ? lines[i][j] : '.';
                 }
             }
             return processed;
         }
         public static char[,] FileToChar2D(Stream stream)
         {
-            string[] lines = new StreamReader(stream).ReadToEnd().Split(Environment.NewLine);
-            char[,] processed = new char[lines.Length, lines[0].Length];
+            string raw = new StreamReader(stream).ReadToEnd();
+            string[] lines = raw
+                .Replace("\r\n", "\n")
+                .Replace('\r', '\n')
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            int maxLen = lines.Length == 0 ? 0 : lines.Max(x => x.Length);
+            char[,] processed = new char[lines.Length, maxLen];
 
             for (int i = 0; i < lines.Length; i++)
             {
-                for (int j = 0; j < lines[i].Length; j++)
+                for (int j = 0; j < maxLen; j++)
                 {
-                    processed[i, j] = lines[i][j];
+                    processed[i, j] = j < lines[i].Length ? lines[i][j] : '.';
                 }
             }
             return processed;

@@ -2,7 +2,7 @@
 using hagymix.utils;
 using Microsoft.Win32;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -29,6 +29,10 @@ namespace hagymix
         static int[] mazeDimensions;
         static Player player;
         static bool isPlaying = false;
+        string? loadedMapPath;
+        bool fogOfWarEnabled = false;
+        bool[,]? visitedCells;
+        bool isHungarian = true;
 
         // -------- Editor state --------
         bool isEditing = false;
@@ -43,6 +47,68 @@ namespace hagymix
         TextBlock? editorTileLabel;
         TextBlock? editorStatsLabel;
 
+        readonly Dictionary<string, string> hu = new()
+        {
+            ["menu"] = "Menü",
+            ["loadMap"] = "Pálya betöltése",
+            ["editor"] = "Szerkesztő",
+            ["fog"] = "Fedett térkép (csak bejárt részek látszanak)",
+            ["save"] = "Mentés",
+            ["reload"] = "Visszatöltés",
+            ["back"] = "Menü",
+            ["lang"] = "HU",
+            ["title"] = "Labirintus",
+            ["gameInfo"] = "Kincsek: {0}/{1} | Irányok: {2}",
+            ["noMapToSave"] = "Nincs aktív játék mentéshez.",
+            ["savedOk"] = "Mentés kész: {0}",
+            ["loadSaveQuestion"] = "Találtam korábbi mentést. Visszatöltsem?",
+            ["exitConfirm"] = "Biztosan ki szeretnél lépni a labirintusból?",
+            ["exitEarlyConfirm"] = "Még nincs meg minden kincs. Biztosan kilépsz?",
+            ["gameWon"] = "Siker! Minden kincset megtaláltál és kijutottál.",
+            ["gameEndedEarly"] = "Kiléptél, de nem találtál meg minden kincset.",
+            ["saveMissing"] = "A mentési fájl nem található.",
+            ["loadedSaveOk"] = "Mentés visszatöltve.",
+            ["editorLoad"] = "Pálya betöltése",
+            ["editorSave"] = "Pálya mentése",
+            ["nextTile"] = "Következő elem",
+            ["prevTile"] = "Előző elem",
+            ["selectedTile"] = "Kiválasztott elem: {0}",
+            ["editorHelp"] = "Bal kattintás: rajzolás | Jobb kattintás: törlés",
+            ["editorStats"] = "Kincsek: {0} | Kijáratok: {1}{2}",
+            ["invalidChars"] = " | Érvénytelen karakter",
+        };
+
+        readonly Dictionary<string, string> en = new()
+        {
+            ["menu"] = "Menu",
+            ["loadMap"] = "Load map",
+            ["editor"] = "Editor",
+            ["fog"] = "Fog-of-war mode (show only visited areas)",
+            ["save"] = "Save",
+            ["reload"] = "Load save",
+            ["back"] = "Menu",
+            ["lang"] = "EN",
+            ["title"] = "Labyrinth",
+            ["gameInfo"] = "Treasures: {0}/{1} | Directions: {2}",
+            ["noMapToSave"] = "No active game to save.",
+            ["savedOk"] = "Saved: {0}",
+            ["loadSaveQuestion"] = "A previous save was found. Load it now?",
+            ["exitConfirm"] = "Are you sure you want to leave the labyrinth?",
+            ["exitEarlyConfirm"] = "Not all treasures are collected yet. Exit anyway?",
+            ["gameWon"] = "Success! You collected all treasures and escaped.",
+            ["gameEndedEarly"] = "You escaped before collecting all treasures.",
+            ["saveMissing"] = "Save file not found.",
+            ["loadedSaveOk"] = "Save loaded.",
+            ["editorLoad"] = "Load map",
+            ["editorSave"] = "Save map",
+            ["nextTile"] = "Next tile",
+            ["prevTile"] = "Previous tile",
+            ["selectedTile"] = "Selected tile: {0}",
+            ["editorHelp"] = "Left click: paint | Right click: erase",
+            ["editorStats"] = "Treasures: {0} | Exits: {1}{2}",
+            ["invalidChars"] = " | Invalid character",
+        };
+
         readonly struct CellCoord
         {
             public int Row { get; }
@@ -50,10 +116,39 @@ namespace hagymix
             public CellCoord(int row, int col) { Row = row; Col = col; }
         }
 
+        class SaveData
+        {
+            public bool FogMode { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+            public bool IsStarted { get; set; }
+            public bool IsOnMap { get; set; }
+            public List<string> CollectedTreasures { get; set; } = new();
+            public List<string> Visited { get; set; } = new();
+        }
+
         public MainWindow()
         {
             InitializeComponent();
-            
+            ApplyLanguage();
+        }
+
+        private string T(string key) => (isHungarian ? hu : en).TryGetValue(key, out var value) ? value : key;
+
+        private void ApplyLanguage()
+        {
+            Title = T("title");
+            MenuTitle.Content = T("menu");
+            LoadMapButton.Content = T("loadMap");
+            EditorButton.Content = T("editor");
+            FogModeCheckbox.Content = T("fog");
+            SaveGameButton.Content = T("save");
+            LoadSaveButton.Content = T("reload");
+            BackToMenuButton.Content = T("back");
+            LangToggleBTN.Content = T("lang");
+            UpdateSelectedTileLabel();
+            UpdateEditorStats();
+            UpdateGameInfo();
         }
 
         private static char NormalizeTileForStorage(char c)
@@ -93,13 +188,14 @@ namespace hagymix
             Editor.Visibility = Visibility.Hidden;
             MazeGrid.Visibility = Visibility.Hidden;
             MenuGrid.Visibility = Visibility.Visible;
+            GameInfoText.Text = "";
         }
 
         private void UpdateSelectedTileLabel()
         {
             if (editorTileLabel == null) return;
             char selected = editorTilePalette[editorSelectedTileIndex];
-            editorTileLabel.Text = $"Selected tile: {TileToDisplayString(selected)}";
+            editorTileLabel.Text = string.Format(T("selectedTile"), TileToDisplayString(selected));
         }
 
         private void UpdateEditorStats()
@@ -110,8 +206,7 @@ namespace hagymix
             int treasures = HagymixSpecialPackage.GetRoomNumber(editorMap);
             int exits = HagymixSpecialPackage.GetSuitableEntrance(editorMap);
             bool invalid = HagymixSpecialPackage.IsInvalidElement(editorMap);
-
-            editorStatsLabel.Text = $"Treasures: {treasures} | Exits: {exits}" + (invalid ? " | Invalid chars" : "");
+            editorStatsLabel.Text = string.Format(T("editorStats"), treasures, exits, invalid ? T("invalidChars") : "");
         }
 
         private void SetEditorChar(int row, int col, char newChar)
@@ -181,28 +276,37 @@ namespace hagymix
             toolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Load
             toolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Save
             toolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Back
+            toolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Prev tile
             toolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Next tile
             toolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Labels
 
-            var loadBtn = new Button { Content = "Load map", Margin = new Thickness(2) };
+            var loadBtn = new Button { Content = T("editorLoad"), Margin = new Thickness(2) };
             loadBtn.Click += EditorLoadBtn_Click;
             Grid.SetColumn(loadBtn, 0);
 
-            var saveBtn = new Button { Content = "Save map", Margin = new Thickness(2) };
+            var saveBtn = new Button { Content = T("editorSave"), Margin = new Thickness(2) };
             saveBtn.Click += EditorSaveBtn_Click;
             Grid.SetColumn(saveBtn, 1);
 
-            var backBtn = new Button { Content = "Back", Margin = new Thickness(2) };
+            var backBtn = new Button { Content = T("back"), Margin = new Thickness(2) };
             backBtn.Click += (s, e) => BackToMenu();
             Grid.SetColumn(backBtn, 2);
 
-            var tileNextBtn = new Button { Content = "Next tile", Margin = new Thickness(2) };
+            var tilePrevBtn = new Button { Content = T("prevTile"), Margin = new Thickness(2) };
+            tilePrevBtn.Click += (s, e) =>
+            {
+                editorSelectedTileIndex = (editorSelectedTileIndex - 1 + editorTilePalette.Length) % editorTilePalette.Length;
+                UpdateSelectedTileLabel();
+            };
+            Grid.SetColumn(tilePrevBtn, 3);
+
+            var tileNextBtn = new Button { Content = T("nextTile"), Margin = new Thickness(2) };
             tileNextBtn.Click += (s, e) =>
             {
                 editorSelectedTileIndex = (editorSelectedTileIndex + 1) % editorTilePalette.Length;
                 UpdateSelectedTileLabel();
             };
-            Grid.SetColumn(tileNextBtn, 3);
+            Grid.SetColumn(tileNextBtn, 4);
 
             var rightStack = new StackPanel
             {
@@ -213,7 +317,7 @@ namespace hagymix
 
             editorTileLabel = new TextBlock
             {
-                Text = $"Selected tile: {TileToDisplayString(editorTilePalette[editorSelectedTileIndex])}",
+                Text = string.Format(T("selectedTile"), TileToDisplayString(editorTilePalette[editorSelectedTileIndex])),
                 VerticalAlignment = VerticalAlignment.Center
             };
             rightStack.Children.Add(editorTileLabel);
@@ -226,11 +330,19 @@ namespace hagymix
             };
             rightStack.Children.Add(editorStatsLabel);
 
-            Grid.SetColumn(rightStack, 4);
+            rightStack.Children.Add(new TextBlock
+            {
+                Text = T("editorHelp"),
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = Brushes.DarkSlateGray
+            });
+
+            Grid.SetColumn(rightStack, 5);
 
             toolbar.Children.Add(loadBtn);
             toolbar.Children.Add(saveBtn);
             toolbar.Children.Add(backBtn);
+            toolbar.Children.Add(tilePrevBtn);
             toolbar.Children.Add(tileNextBtn);
             toolbar.Children.Add(rightStack);
 
@@ -381,6 +493,12 @@ namespace hagymix
         }
         void CreateMapVisualization ()
         {
+            MazeGrid.Children.Clear();
+            MazeGrid.RowDefinitions.Clear();
+            MazeGrid.ColumnDefinitions.Clear();
+            CreateColumnDefinitions();
+            CreateRowDefinitions();
+
             for (int i = 0; i < mazeDimensions[0]; i++)
             {
                 for (int j = 0; j < mazeDimensions[1]; j++)
@@ -412,6 +530,86 @@ namespace hagymix
 
                 }
             }
+        }
+
+        private string GetDirectionsText()
+        {
+            if (player == null || maze == null || !player.IsOnMap || maze[player.Y, player.X] == null) return "-";
+            var room = maze[player.Y, player.X]!;
+            var dirs = new List<string>();
+            if (room.ways[0]) dirs.Add(isHungarian ? "W/fel" : "W/up");
+            if (room.ways[1]) dirs.Add(isHungarian ? "D/jobb" : "D/right");
+            if (room.ways[2]) dirs.Add(isHungarian ? "S/le" : "S/down");
+            if (room.ways[3]) dirs.Add(isHungarian ? "A/bal" : "A/left");
+            return dirs.Count == 0 ? "-" : string.Join(", ", dirs);
+        }
+
+        private void UpdateGameInfo()
+        {
+            if (!isPlaying || player == null)
+            {
+                GameInfoText.Text = "";
+                return;
+            }
+
+            GameInfoText.Text = string.Format(T("gameInfo"), player.TreasureCount, player.TotalTreasureCount, GetDirectionsText());
+        }
+
+        private void MarkVisitedCurrent()
+        {
+            if (!fogOfWarEnabled || visitedCells == null || player == null || !player.IsOnMap) return;
+            if (player.Y >= 0 && player.X >= 0 && player.Y < visitedCells.GetLength(0) && player.X < visitedCells.GetLength(1))
+            {
+                visitedCells[player.Y, player.X] = true;
+            }
+        }
+
+        private void RefreshMazeVisualState()
+        {
+            if (maze == null || player == null) return;
+            int rows = maze.GetLength(0);
+            int cols = maze.GetLength(1);
+
+            for (int i = 0; i < MazeGrid.Children.Count; i++)
+            {
+                var vb2 = MazeGrid.Children[i] as Viewbox;
+                if (vb2 == null) continue;
+                var tb2 = vb2.Child as TextBlock;
+                if (tb2 == null) continue;
+
+                int y = i / cols;
+                int x = i % cols;
+                if (y < 0 || y >= rows || x < 0 || x >= cols) continue;
+
+                bool visible = !fogOfWarEnabled || visitedCells == null || visitedCells[y, x];
+                var room = maze[y, x];
+
+                if (!visible)
+                {
+                    tb2.Text = " ";
+                    tb2.Foreground = Brushes.Black;
+                    tb2.Background = Brushes.WhiteSmoke;
+                    continue;
+                }
+
+                tb2.Text = room?.roomChar ?? " ";
+                bool isCollected = (room != null && room.isTreasure == Treasure.Collected);
+                tb2.Foreground = isCollected ? Brushes.Yellow : Brushes.Black;
+                tb2.Background = Brushes.White;
+            }
+
+            if (player.IsOnMap)
+            {
+                int playerIndex = player.Y * cols + player.X;
+                if (playerIndex >= 0 && playerIndex < MazeGrid.Children.Count)
+                {
+                    var vb = MazeGrid.Children[playerIndex] as Viewbox;
+                    var tb = vb?.Child as TextBlock;
+                    if (tb != null) tb.Background = Brushes.LightGreen;
+                }
+            }
+
+            UpdateGameInfo();
         }
         private void Main_KeyDown(object sender, KeyEventArgs e)
         {
@@ -447,87 +645,103 @@ namespace hagymix
             if (player == null) return;
             if (maze == null) return;
 
-            int rows = maze.GetLength(0);
-            int cols = maze.GetLength(1);
-            if (cols == 0 || rows == 0) return;
+            if (maze.GetLength(1) == 0 || maze.GetLength(0) == 0) return;
 
-            switch (e.Key)
+            Direction? direction = e.Key switch
             {
-                case Key.Up:
-                    if (player.IsStarted) player.Move(Direction.Up);
-                    break;
-                case Key.Right:
-                    if (player.IsStarted) player.Move(Direction.Right);
-                    else player.ChangeEntrance();
-                    break;
-                case Key.Down:
-                    if (player.IsStarted) player.Move(Direction.Down);
-                    break;
-                case Key.Left:
-                    if (player.IsStarted) player.Move(Direction.Left);
-                    break;
-                case Key.Enter:
-                case Key.Space:
-                    if (!player.IsStarted) player.SetEntrance();
-                    break;
+                Key.Up or Key.W => Direction.Up,
+                Key.Right or Key.D => Direction.Right,
+                Key.Down or Key.S => Direction.Down,
+                Key.Left or Key.A => Direction.Left,
+                _ => null
+            };
+
+            if (e.Key == Key.Enter || e.Key == Key.Space)
+            {
+                if (!player.IsStarted)
+                {
+                    player.SetEntrance();
+                    MarkVisitedCurrent();
+                }
+                RefreshMazeVisualState();
+                return;
             }
 
-            // Update all cells safely
-            for (int i = 0; i < MazeGrid.Children.Count; i++)
+            if (e.Key == Key.F5)
             {
-                var vb2 = MazeGrid.Children[i] as Viewbox;
-                if (vb2 == null) continue;
-                var tb2 = vb2.Child as TextBlock;
-                if (tb2 == null) continue;
+                SaveGameState();
+                return;
+            }
 
-                tb2.Background = Brushes.White;
+            if (e.Key == Key.F9)
+            {
+                LoadGameStateFromCurrentMap();
+                return;
+            }
 
-                int y = i / cols;
-                int x = i % cols;
-                if (y >= 0 && y < rows && x >= 0 && x < cols)
+            if (direction == null) return;
+            if (!player.IsStarted)
+            {
+                if (direction == Direction.Right) player.ChangeEntrance();
+                RefreshMazeVisualState();
+                return;
+            }
+
+            if (player.CanExit(direction.Value))
+            {
+                bool allDone = player.AllTreasuresCollected;
+                string msg = allDone ? T("exitConfirm") : T("exitEarlyConfirm");
+                if (MessageBox.Show(msg, T("title"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 {
-                    var cell = maze[y, x];
-                    bool isCollected = (cell != null && cell.isTreasure == Treasure.Collected);
-                    tb2.Foreground = isCollected ? Brushes.Yellow : Brushes.Black;
-                }
-                else
-                {
-                    tb2.Foreground = Brushes.Black;
+                    RefreshMazeVisualState();
+                    return;
                 }
             }
 
-            // Highlight player cell
-            if (player.IsOnMap)
+            MoveResult moveResult = player.Move(direction.Value);
+            if (moveResult == MoveResult.Exited)
             {
-                int playerIndex = player.Y * cols + player.X;
-                if (playerIndex >= 0 && playerIndex < MazeGrid.Children.Count)
-                {
-                    var vb = MazeGrid.Children[playerIndex] as Viewbox;
-                    var tb = vb?.Child as TextBlock;
-                    if (tb != null) tb.Background = Brushes.Green;
-                }
+                isPlaying = false;
+                MessageBox.Show(player.AllTreasuresCollected ? T("gameWon") : T("gameEndedEarly"));
+                BackToMenu();
+                return;
             }
+
+            MarkVisitedCurrent();
+            RefreshMazeVisualState();
         }
 
         private void LoadMapClick(object sender, RoutedEventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "text file|*.txt";
-            ofd.Title = "már megint itt ülök";
+            ofd.Title = T("loadMap");
             ofd.Multiselect = false;
             if (ofd.ShowDialog() == false) return;
 
-            Stream stream = ofd.OpenFile();
-            
+            loadedMapPath = ofd.FileName;
+            fogOfWarEnabled = FogModeCheckbox.IsChecked == true;
+
+            using Stream stream = ofd.OpenFile();
             maze = StringHelper.Char2DToRoomMap(StringHelper.FileToChar2D(stream))!;
             mazeDimensions = [Room.GetMazeLength(maze), Room.GetMazeWidth(maze)];
-            CreateColumnDefinitions();
-            CreateRowDefinitions();
             CreateMapVisualization();
             player = new Player(maze);
+            visitedCells = new bool[mazeDimensions[0], mazeDimensions[1]];
+            MarkVisitedCurrent();
             isPlaying = true;
             MenuGrid.Visibility = Visibility.Hidden;
             MazeGrid.Visibility = Visibility.Visible;
+            Editor.Visibility = Visibility.Hidden;
+            RefreshMazeVisualState();
+
+            if (File.Exists(GetSavePath()))
+            {
+                if (MessageBox.Show(T("loadSaveQuestion"), T("title"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    LoadGameStateFromCurrentMap();
+                }
+            }
         }
 
         private void EditorClick(object sender, RoutedEventArgs e)
@@ -558,11 +772,120 @@ namespace hagymix
             Editor.Visibility = Visibility.Visible;
 
             BuildEditorUI();
+            ApplyLanguage();
         }
 
         private void ToggleLangClick(object sender, RoutedEventArgs e)
         {
+            isHungarian = !isHungarian;
+            ApplyLanguage();
+        }
 
+        private string GetSavePath()
+        {
+            if (string.IsNullOrWhiteSpace(loadedMapPath)) return "";
+            return System.IO.Path.ChangeExtension(loadedMapPath, ".sav");
+        }
+
+        private void SaveGameState()
+        {
+            if (!isPlaying || player == null || maze == null || string.IsNullOrWhiteSpace(loadedMapPath))
+            {
+                MessageBox.Show(T("noMapToSave"));
+                return;
+            }
+
+            var save = new SaveData
+            {
+                FogMode = fogOfWarEnabled,
+                X = player.X,
+                Y = player.Y,
+                IsStarted = player.IsStarted,
+                IsOnMap = player.IsOnMap
+            };
+
+            for (int i = 0; i < maze.GetLength(0); i++)
+            {
+                for (int j = 0; j < maze.GetLength(1); j++)
+                {
+                    if (maze[i, j] != null && maze[i, j]!.isTreasure == Treasure.Collected)
+                    {
+                        save.CollectedTreasures.Add($"{i}:{j}");
+                    }
+                    if (visitedCells != null && visitedCells[i, j])
+                    {
+                        save.Visited.Add($"{i}:{j}");
+                    }
+                }
+            }
+
+            string saveJson = JsonSerializer.Serialize(save);
+            string savePath = GetSavePath();
+            File.WriteAllText(savePath, saveJson, Encoding.UTF8);
+            MessageBox.Show(string.Format(T("savedOk"), savePath));
+        }
+
+        private void LoadGameStateFromCurrentMap()
+        {
+            if (!isPlaying || player == null || maze == null || string.IsNullOrWhiteSpace(loadedMapPath)) return;
+
+            string savePath = GetSavePath();
+            if (!File.Exists(savePath))
+            {
+                MessageBox.Show(T("saveMissing"));
+                return;
+            }
+
+            SaveData? save = JsonSerializer.Deserialize<SaveData>(File.ReadAllText(savePath, Encoding.UTF8));
+            if (save == null) return;
+
+            fogOfWarEnabled = save.FogMode;
+            FogModeCheckbox.IsChecked = fogOfWarEnabled;
+
+            visitedCells = new bool[maze.GetLength(0), maze.GetLength(1)];
+            foreach (string pos in save.Visited)
+            {
+                string[] parts = pos.Split(':');
+                if (parts.Length != 2) continue;
+                if (int.TryParse(parts[0], out int row) && int.TryParse(parts[1], out int col))
+                {
+                    if (row >= 0 && col >= 0 && row < visitedCells.GetLength(0) && col < visitedCells.GetLength(1))
+                    {
+                        visitedCells[row, col] = true;
+                    }
+                }
+            }
+
+            var collected = new List<(int row, int col)>();
+            foreach (string pos in save.CollectedTreasures)
+            {
+                string[] parts = pos.Split(':');
+                if (parts.Length != 2) continue;
+                if (int.TryParse(parts[0], out int row) && int.TryParse(parts[1], out int col))
+                {
+                    collected.Add((row, col));
+                }
+            }
+
+            player.RestoreState(save.X, save.Y, save.IsStarted, save.IsOnMap, collected);
+            MarkVisitedCurrent();
+            RefreshMazeVisualState();
+            MessageBox.Show(T("loadedSaveOk"));
+        }
+
+        private void SaveGameClick(object sender, RoutedEventArgs e)
+        {
+            SaveGameState();
+        }
+
+        private void LoadGameStateClick(object sender, RoutedEventArgs e)
+        {
+            LoadGameStateFromCurrentMap();
+        }
+
+        private void BackToMenuClick(object sender, RoutedEventArgs e)
+        {
+            BackToMenu();
         }
     }
 }
