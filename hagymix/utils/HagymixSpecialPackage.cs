@@ -13,7 +13,7 @@ namespace hagymix.utils
         /// </summary>
         /// <param name="map">Labirintus mátrixa</param>
         /// <returns>Termek száma</returns>
-        static int GetRoomNumber(char[,] map)
+        public static int GetRoomNumber(char[,] map)
         {
             var maze = StringHelper.Char2DToRoomMap(map);
             var flat = StringHelper.ToFlatRoomsArray(maze);
@@ -24,7 +24,7 @@ namespace hagymix.utils
         /// </summary>
         /// <param name="map">Labirintus mátrixa</param>
         /// <returns>Az alkalmas kijáratok száma</returns>
-        static int GetSuitableEntrance(char[,] map)
+        public static int GetSuitableEntrance(char[,] map)
         {
             var maze = StringHelper.Char2DToRoomMap(map);
             var flat = StringHelper.ToFlatRoomsArray(maze);
@@ -35,7 +35,7 @@ namespace hagymix.utils
         /// </summary>
         /// <param name="map">Labirintus mátrixa</param>
         /// <returns>true - A térkép tartalmaz szabálytalan karaktert, false - nincs benne ilyen</returns>
-        static bool IsInvalidElement(char[,] map)
+        public static bool IsInvalidElement(char[,] map)
         {
             var validChars = new HashSet<char>() { '║','═','╝','╚','╦','╗','╩','╠','╬','╣','╔','█','.',' ' };
             int rows = map.GetLength(0);
@@ -54,7 +54,7 @@ namespace hagymix.utils
         /// </summary>
         /// <param name="map">Labirintus mátrixa</param>
         /// <returns>A pozíciók "sor_index:oszlop_index" formátumban szerepelnek a lista elemeiként
-        static List<string> GetUnavailableElements(char[,] map)
+        public static List<string> GetUnavailableElements(char[,] map)
         {
             List<string> unavailables = new List<string>();
             var maze = StringHelper.Char2DToRoomMap(map);
