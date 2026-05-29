@@ -70,10 +70,10 @@
         </Grid>
 
         <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-            <Button Content="Mentés" Margin="4" Click="SaveGameClick" x:Name="SaveGameButton" Padding="10 5 10 5"/>
-            <Button Content="Visszatöltés" Margin="4" Click="LoadGameStateClick" x:Name="LoadSaveButton" Padding="10 5 10 5"/>
-            <Button Content="Menü" Margin="4" Click="BackToMenuClick" x:Name="BackToMenuButton" Padding="10 5 10 5"/>
-            <Button Content="HU" Margin="4" HorizontalAlignment="Center" VerticalAlignment="Bottom" Click="ToggleLangClick" x:Name="LangToggleBTN" Padding="10 5 10 5"/>
+            <Button Focusable="False" Content="Mentés" Margin="4" Click="SaveGameClick" x:Name="SaveGameButton" Padding="10 5 10 5"/>
+            <Button Focusable="False" Content="Visszatöltés" Margin="4" Click="LoadGameStateClick" x:Name="LoadSaveButton" Padding="10 5 10 5"/>
+            <Button Focusable="False" Content="Menü" Margin="4" Click="BackToMenuClick" x:Name="BackToMenuButton" Padding="10 5 10 5"/>
+            <Button Focusable="False" Content="HU" Margin="4" HorizontalAlignment="Center" VerticalAlignment="Bottom" Click="ToggleLangClick" x:Name="LangToggleBTN" Padding="10 5 10 5"/>
         </StackPanel>
     </Grid>
 </Window>
